@@ -208,6 +208,25 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public void test5(View view){
+        new Thread(){
+            @Override
+            public void run() {
+                try {
+                    //URL url = new URL("http://10.0.1.1/brad01.php?cname=tony&tel=0919123456&birthday=2000-02-09");
+                    URL url = new URL("http://www.brad.tw/cloudfitness/login.php?account=xxx&passwd=xxx");
+
+                    HttpURLConnection conn = (HttpURLConnection)url.openConnection();
+                    conn.connect();
+                    conn.getInputStream();
+
+                }catch (Exception e){
+                    Log.i("brad", e.toString());
+                }
+            }
+        }.start();
+    }
+
     private class UIHander extends Handler {
         @Override
         public void handleMessage(Message msg) {
