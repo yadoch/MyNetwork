@@ -29,6 +29,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 
 public class MainActivity extends AppCompatActivity {
@@ -47,7 +48,35 @@ public class MainActivity extends AppCompatActivity {
         img=(ImageView) findViewById(R.id.img);
         hander=new UIHander();
 
+        // sd 卡事前處理
+        if (ContextCompat.checkSelfPermission(this,
+                // 要判斷的條件(網路,外部儲存裝置....)
+                Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED){
+            // no
+            ActivityCompat.requestPermissions(this,
+                    // 要判斷的條件(網路,外部儲存裝置....)
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    123);
+        }else {
+            isPermissionOK = true;
+            init();
+        }
     }
+
+    private void init(){
+        if (!isPermissionOK) {
+            finish();
+        }else{
+            go();
+        }
+        //Log.i("brad", "start");
+    }
+
+    private void  go(){
+        sdroot= Environment.getExternalStorageDirectory();
+    }
+
     // 基本語法展示,驗證要於Thread()
     public void test1(View view){
         new Thread(){
@@ -72,7 +101,7 @@ public class MainActivity extends AppCompatActivity {
         }.start();
 
     }
-  // 抓圖片
+  // 抓圖片-必須透過Hander 把資料傳出
     public void test2(View view){
         new Thread(){
             @Override
@@ -103,12 +132,66 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    // API展示
+    public void test3(View view){
+        new Thread(){
+            @Override
+            public void run() {
+                getWebPDF("www.gamer.com.tw");
+            }
+        }.start();
+
+    }
+
+    private void getWebPDF(String urlString){
+        try {
+            //2. 準備存入SD卡的檔案名稱
+            savePDF=new File(sdroot,"myweb.pdf");
+            FileOutputStream fout = new FileOutputStream(savePDF);
+
+            //1.準備URL 連線
+            URL url= new URL(urlString);
+            HttpURLConnection conn= (HttpURLConnection) url.openConnection();
+            conn.connect();
+
+            InputStream in=conn.getInputStream();
+            byte[] buf =new byte[4096];
+            int len = 0;
+            while ((len = in.read(buf)) != -1){
+
+                //3.連接輸出入管子
+                Log.i("geoff","Len:"+len);
+                fout.write(buf,0,len);
+            }
+            // flush 到SD的PDF檔案中
+            fout.flush();
+            fout.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
     private class UIHander extends Handler{
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
             img.setImageBitmap(bmp);
 
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 123){
+            if (grantResults.length > 0
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                isPermissionOK = true;
+
+            }
+            init();
         }
     }
 }
