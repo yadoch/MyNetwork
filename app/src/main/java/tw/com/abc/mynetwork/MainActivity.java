@@ -10,6 +10,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.ShareCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -25,12 +26,14 @@ import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.sql.Connection;
 
 public class MainActivity extends AppCompatActivity {
     private ImageView img;
@@ -180,6 +183,61 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    public void test4(View view){
+        new Thread(){
+            @Override
+            public void run() {
+                super.run();
+                getJSONString("http://opendata2.epa.gov.tw/AQX.json");
+            }
+        }.start();
+    }
+
+    private void getJSONString(String urlString){
+
+        try {
+            URL url= new URL(urlString);
+            HttpURLConnection conn =(HttpURLConnection) url.openConnection();
+            conn.connect();
+            // 原始架構 InputStream --> InputStreamReader -->BufferedReader
+            /*
+            InputStream in = conn.getInputStream();
+            InputStreamReader inputStreamReader = new InputStreamReader(in);
+            BufferedReader br = new BufferedReader(inputStreamReader);
+            */
+            //整合後
+            BufferedReader br= new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            String jsonString =br.readLine(); // json 的陣列只有一行
+            // Log.i("geoff","JSON:"+jsonString);
+
+            parseJSONString(jsonString);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void parseJSONString(String json){
+        try {
+            JSONArray root = new JSONArray(json);
+            //Log.i("geoff","Count:"+root.length());
+            for (int i=0; i<root.length() ;i++){
+                Log.i("geoff","i:"+i);
+                //   取得row
+                //Log.i("geoff",root.getJSONObject(i).toString());
+
+                JSONObject row = root.getJSONObject(i);
+                String country = row.getString("County");
+                String siteName = row.getString("SiteName");
+                String pm25 = row.getString("PM2.5");
+                Log.i("geoff", country + ":" + siteName + ":" + pm25);
+
+
+            }
+        } catch (JSONException e) {
+            //e.printStackTrace();
+            Log.i("geoff",e.toString());
+        }
+    }
     private class UIHander extends Handler{
         @Override
         public void handleMessage(Message msg) {
