@@ -75,6 +75,11 @@ public class MainActivity extends AppCompatActivity {
 
     private void  go(){
         sdroot= Environment.getExternalStorageDirectory();
+        //1. 建立progressDialog物件
+        progressDialog =new ProgressDialog(this);
+        //2. 設定
+        progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        progressDialog.setTitle("Downloading ......");
     }
 
     // 基本語法展示,驗證要於Thread()
@@ -132,12 +137,13 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    // API展示
+    // API展示-網頁轉PDF-檔案匯到電腦出現損壞的狀況,原因不明
     public void test3(View view){
+        progressDialog.show();
         new Thread(){
             @Override
             public void run() {
-                getWebPDF("www.gamer.com.tw");
+                getWebPDF("http://pdfmyurl.com/?http://tw.yahoo.com");
             }
         }.start();
 
@@ -166,7 +172,8 @@ public class MainActivity extends AppCompatActivity {
             // flush 到SD的PDF檔案中
             fout.flush();
             fout.close();
-
+            // 傳回 1 中止 progressDialog
+            hander.sendEmptyMessage(1);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -177,8 +184,13 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-            img.setImageBitmap(bmp);
-
+            switch (msg.what) {
+                case 0:
+                    img.setImageBitmap(bmp);break;
+                case 1:
+                    // progressDialog 終止
+                    progressDialog.dismiss();break;
+            }
         }
     }
 
