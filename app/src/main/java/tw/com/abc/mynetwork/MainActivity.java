@@ -34,6 +34,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.sql.Connection;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private ImageView img;
@@ -238,6 +239,45 @@ public class MainActivity extends AppCompatActivity {
             Log.i("geoff",e.toString());
         }
     }
+
+    public void test5(View view){
+        new Thread(){
+            @Override
+            public void run() {
+                try {
+                    URL url = new URL("http://10.1.1.62/brad.php?cname=roger&tel=0934&birthday=2001-01-09");
+                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                    conn.connect();
+                    conn.getInputStream();  // 一定要加,才能完成寫入動作
+                } catch (Exception e) {
+                    //e.printStackTrace();
+                    Log.i("geoff",e.toString());
+                }
+            }
+        }.start();
+    }
+
+    public void test6(View view){
+
+        new Thread(){
+            @Override
+            public void run() {
+                try {
+                    MultipartUtility mu = new MultipartUtility("http://10.1.1.62/brad02.php","UTF-8");
+                    mu.addFormField("data1","1111");
+                    mu.addFormField("data2","2222");
+                    List<String> ret =mu.finish();
+                    for (String line : ret ){
+                        Log.i("geoff",line);
+                    }
+                } catch (IOException e) {
+
+                    Log.i("geoff",e.toString());
+                }
+            }
+        }.start();
+    }
+
     private class UIHander extends Handler{
         @Override
         public void handleMessage(Message msg) {
